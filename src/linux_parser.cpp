@@ -130,7 +130,7 @@ int LinuxParser::RunningProcesses() {
 
 // TODO: Read and return the system uptime 
 long LinuxParser::UpTime() { 
-  long timeUpSeconds, timeIdleSeconds, value;
+  long timeUpSeconds, timeIdleSeconds;
     std::ifstream fileStream(kProcDirectory + kUptimeFilename);
     string line, key;
     if (fileStream.is_open()) {
@@ -140,32 +140,48 @@ long LinuxParser::UpTime() {
       }
   return timeUpSeconds; }
 
-// TODO: Read and return the number of jiffies for the system
+/* // TODO: Read and return the number of jiffies for the system
 // tick rate = clock frequency in Hz = declared in include/asm-i386/param.h
 // Jiffies = number of ticks since system booted = declared in <linux/jiffies.h>
 // seconds = (jiffies / Hz)
-long LinuxParser::Jiffies() { 
-  float runProcesses, value;
-    std::ifstream fileStream(kProcDirectory + kStatFilename);
-    string line, key;
-    if (fileStream.is_open()) {
-      while(std::getline(fileStream,line)){ // get each line from fileStream
-        std::istringstream lineStream(line);
-        lineStream >> key >> value; // key and value separated by spaces
-        if (key == "procs_running"){
-          runProcesses = value;}
-      }
-    }
-  return 0; }
+long LinuxParser::Jiffies() { return 0; }
 
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() { return 0; }
 
 // TODO: Read and return the number of idle jiffies for the system
-long LinuxParser::IdleJiffies() { return 0; }
+long LinuxParser::IdleJiffies() { return 0; } */
 
 // TODO: Read and return CPU utilization
-vector<string> LinuxParser::CpuUtilization() { return {}; }
+vector<string> LinuxParser::CpuUtilization() {
+  
+  // initialize output
+  vector<string> cpu_vector;
+  string key, user, nice, system, idle, iowait, irq, softirq, steal, guest, guest_nice;
+
+  // access file /proc/stat from namespace LinuxParser
+  std::ifstream fileStream(kProcDirectory + kStatFilename); 
+  std::string line;
+  
+  if(fileStream.is_open()){
+    while(std::getline(fileStream,line)){ 
+      std::istringstream lineStream(line);
+      lineStream >> key >> user >> nice >> system >> idle >> iowait >> irq >> softirq >> steal >> guest >> guest_nice;
+      if(key == "cpu"){
+        cpu_vector.push_back(user);
+        cpu_vector.push_back(nice);
+        cpu_vector.push_back(system);
+        cpu_vector.push_back(idle);
+        cpu_vector.push_back(iowait);
+        cpu_vector.push_back(irq);
+        cpu_vector.push_back(softirq);
+        cpu_vector.push_back(steal);
+        cpu_vector.push_back(guest);
+        cpu_vector.push_back(guest_nice);
+      }
+    } 
+  }
+  return cpu_vector; }
 
 // TODO: Read and return the number of active jiffies for a PID
 // REMOVE: [[maybe_unused]] once you define the function
