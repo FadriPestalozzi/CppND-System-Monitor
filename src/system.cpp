@@ -48,4 +48,14 @@ long int System::UpTime() { return LinuxParser::UpTime(); }
 Processor& System::Cpu() { return cpu_; }
 
 // TODO: Return a container composed of the system's processes
-vector<Process>& System::Processes() { return processes_; }
+vector<Process>& System::Processes() {
+    processes_.clear(); // always start with empty vector 
+    vector<int> PID_vector = LinuxParser::Pids();  // get vector process IDs
+    // to be stored in vector processes_
+    for(int i = 0; i < (int)PID_vector.size(); i++){
+        Process new_process(PID_vector.at(i));
+        processes_.push_back(new_process);
+    }
+    // sort, using overloaded '<' operator defined in process.cpp
+    sort(processes_.begin(), processes_.end());
+     return processes_; }

@@ -6,7 +6,7 @@
 
 #include "linux_parser.h"
 #include "readFromFile.h"
-#include "format.h"
+#include "read_key_value.h"
 
 using std::stof; // string to float
 using std::string;
@@ -146,6 +146,10 @@ long LinuxParser::UpTime() {
 // seconds = (jiffies / Hz)
 long LinuxParser::Jiffies() { return 0; }
 
+// TODO: Read and return the number of active jiffies for a PID
+// REMOVE: [[maybe_unused]] once you define the function
+long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+
 // TODO: Read and return the number of active jiffies for the system
 long LinuxParser::ActiveJiffies() { return 0; }
 
@@ -183,26 +187,101 @@ vector<string> LinuxParser::CpuUtilization() {
   }
   return cpu_vector; }
 
-// TODO: Read and return the number of active jiffies for a PID
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::ActiveJiffies(int pid[[maybe_unused]]) { return 0; }
+// Processor Utilization of individual PID, overloaded with overall CpuUtilization
+// CPU utilization of a process stored in /proc/[PID]/stat
+float LinuxParser::CpuUtilization(int pid) {
+  string stat_int;
+  string pid_str = to_string(pid);
+  vector<string> PID_stat_vector;  
+  int utime,stime,starttime,totaltime;
+  long int uptime = LinuxParser::UpTime(); // [seconds]
+  float time_seconds, cpu_percent{0.0};
+  int freq = sysconf(_SC_CLK_TCK); // [Hz]
+  std::ifstream filestream(kProcDirectory + pid_str + kStatFilename);
+  if(filestream.is_open()){
+      while (filestream >> stat_int){
+          PID_stat_vector.push_back(stat_int);
+      } // https://man7.org/linux/man-pages/man5/proc.5.html
+    utime  = std::stoi(PID_stat_vector[13]); // time of process in user mode [clock ticks]
+    stime  = std::stoi(PID_stat_vector[14]); // time of process in kernel mode [clock ticks]
+    starttime = std::stoi(PID_stat_vector[21]); // time of process after boot [clock ticks]
+    totaltime = (utime + stime)/freq; // [seconds]
+    time_seconds = uptime - (starttime/freq); // [seconds]
+    cpu_percent = totaltime / time_seconds;
+  }
+  return cpu_percent;}
 
 // TODO: Read and return the command associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Command(int pid[[maybe_unused]]) { return string(); }
+// command to launch a PID in /proc/[pid]/cmdline
+string LinuxParser::Command(int pid) {  
+  string pid_str = to_string(pid); // create filestream of PID path to get PID command
+  std::ifstream filestream(kProcDirectory + pid_str + kCmdlineFilename);
+  string line, command; // parse command from linestream
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      std::istringstream linestream(line);
+      linestream >> command; 
+    }
+  }
+  return command; }
 
 // TODO: Read and return the memory used by a process
-// REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Ram(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Ram(int pid) {
+  string pid_str = to_string(pid); // path to PID status
+  string path = kProcDirectory + pid_str + kStatusFilename;
+  string target_key = "VmRSS:"; // get value by key
+  string memory = read_key_value(path, target_key);
+  return memory;
+  }
 
 // TODO: Read and return the user ID associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::Uid(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::Uid(int pid) {
+  string pid_str = to_string(pid); // path to PID status
+  string path = kProcDirectory + pid_str + kStatusFilename;
+  string target_key = "Uid:"; // get value by key
+  string uid = read_key_value(path, target_key);
+  return uid;
+}
 
 // TODO: Read and return the user associated with a process
-// REMOVE: [[maybe_unused]] once you define the function
-string LinuxParser::User(int pid[[maybe_unused]]) { return string(); }
+string LinuxParser::User(int pid) {
+  string line, username, name_str, x, uid_str;
+  // string pidNum = to_string(pid);
+  std::ifstream filestream(kPasswordPath);
+  if (filestream.is_open()) {
+    while (std::getline(filestream, line)) {
+      // to use linestream, ensure delimeter = space ' '
+      std::replace(line.begin(), line.end(), ':', ' ');
+      std::istringstream linestream(line);
+      while (linestream >> name_str >> x >> uid_str) {
+        if (uid_str == LinuxParser::Uid(pid)) {
+          username = name_str;
+        }
+      }
+    }
+  }
+  return username;
+}
 
 // TODO: Read and return the uptime of a process
-// REMOVE: [[maybe_unused]] once you define the function
-long LinuxParser::UpTime(int pid[[maybe_unused]]) { return 0; }
+// UpTime = time since process started after system boot
+// overloaded with overall Up Time
+// starttime %llu
+// before Linux 2.6, this value was expressed in jiffies
+// since  Linux 2.6, this value is expressed in clock ticks
+long LinuxParser::UpTime(int pid) { 
+  long process_time_seconds{0}; 
+  int freq = sysconf(_SC_CLK_TCK); // [Hz]
+  string line, start_time;
+  string pid_str = to_string(pid); 
+  std::ifstream filestream(kProcDirectory + pid_str + kStatFilename);
+    if (filestream.is_open()) {
+      std::getline(filestream, line);
+      std::istringstream linestream(line);
+      for (int i = 0; i<22; ++i){ // get process start time on position 21
+        linestream >> start_time;
+      }
+    }
+  process_time_seconds = LinuxParser::UpTime() - std::stol(start_time)/freq;
+  return process_time_seconds;
+}
