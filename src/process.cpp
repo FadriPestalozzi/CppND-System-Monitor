@@ -31,4 +31,13 @@ string Process::User() { return LinuxParser::User(pid); }
 long int Process::UpTime() { return LinuxParser::UpTime(pid); }
 
 // TODO: Overload the "less than" comparison operator for Process objects to sort in system.cpp
-bool Process::operator<(Process a) { return CpuUtilization() > a.CpuUtilization(); }
+    // to sort for different columns, change overload function operator< using keyboard input
+bool Process::operator<(Process a) { 
+    switch(colSort){
+        case by_cpu : return CpuUtilization() > a.CpuUtilization();
+            break;
+        case by_ram : return Ram() > a.Ram();
+            break;
+        default : return CpuUtilization() > a.CpuUtilization();
+    }
+}

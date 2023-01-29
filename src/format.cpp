@@ -2,6 +2,7 @@
 #include <string>
 
 #include "format.h"
+#include <iomanip> // pad zeros
 
 using std::string;
 
@@ -24,9 +25,9 @@ long secondsRemaining, minutesTotal, minutesRemaining, hoursTotal;
     std::stringstream stream_SS;
 
     // add long number to variable of type stringstream
-    stream_HH << hoursTotal;
-    stream_MM << minutesRemaining;
-    stream_SS << secondsRemaining;
+    stream_HH << std::setw(2) << std::setfill('0') << hoursTotal; // pad zeros if value below 10
+    stream_MM << std::setw(2) << std::setfill('0') << minutesRemaining; // pad zeros if value below 10
+    stream_SS << std::setw(2) << std::setfill('0') << secondsRemaining; // pad zeros if value below 10
 
     // initialize output strings
     string HH, MM, SS, output;
