@@ -9,7 +9,7 @@
 #include "system.h"
 #include "process.h" // to include colSort
 
-colSortOptions colSort=by_ram; // define global 
+colSortOptions colSort=by_ram; // define global variable
 
 using std::string;
 using std::to_string;
@@ -92,15 +92,16 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
 void NCursesDisplay::Display(System& system, int n) {
   initscr();      // start ncurses
   noecho();       // do not print input values
-  cbreak();       // terminate ncurses on ctrl + c
+  // cbreak();       // terminate ncurses on ctrl + c
   start_color();  // enable color
 
   int x_max{getmaxx(stdscr)};
   WINDOW* system_window = newwin(9, x_max - 1, 0, 0);
   WINDOW* process_window =
       newwin(3 + n, x_max - 1, system_window->_maxy + 1, 0);
+      timeout(-1);
 
-  while (1) { // continuously refresh to update displayed values --> re-sort here
+  while (true) { // continuously refresh to update displayed values --> re-sort here
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
     init_pair(2, COLOR_GREEN, COLOR_BLACK);
     box(system_window, 0, 0);
@@ -114,9 +115,14 @@ void NCursesDisplay::Display(System& system, int n) {
     
     // STILL TODO: listen to possible user input to re-sort columns
     // colSort reference is undefined ... although process.h included
-    colSort=by_ram;
-
-
+    int ch = getch();
+    if (ch == 'c'){
+        colSort=by_cpu;
+        //  endwin(); // must call
+        //  exit(0);
+      }
+    else if(ch == 'r'){
+        colSort=by_ram;
+    }
   }
-  endwin();
 }

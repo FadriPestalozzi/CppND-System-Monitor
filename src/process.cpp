@@ -30,13 +30,25 @@ string Process::User() { return LinuxParser::User(pid); }
 // process starting after system
 long int Process::UpTime() { return LinuxParser::UpTime(pid); }
 
+// mystoi and not stoi since string not always containing a number
+int mystoi(std::string a){
+    try
+    {
+        return stoi(a);
+    }
+    catch(const std::invalid_argument &e) // e = exception
+    {
+        return 0;
+    }
+}
+
 // TODO: Overload the "less than" comparison operator for Process objects to sort in system.cpp
     // to sort for different columns, change overload function operator< using keyboard input
 bool Process::operator<(Process a) { 
     switch(colSort){
         case by_cpu : return CpuUtilization() > a.CpuUtilization();
             break;
-        case by_ram : return Ram() > a.Ram();
+        case by_ram : return mystoi(Ram()) > mystoi(a.Ram());
             break;
         default : return CpuUtilization() > a.CpuUtilization();
     }
