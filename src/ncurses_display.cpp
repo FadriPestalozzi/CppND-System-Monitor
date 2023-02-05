@@ -9,6 +9,8 @@
 #include "system.h"
 #include "process.h" // to include colSort
 
+colSortOptions colSort=by_ram; // define global 
+
 using std::string;
 using std::to_string;
 
