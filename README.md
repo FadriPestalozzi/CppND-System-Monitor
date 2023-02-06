@@ -1,3 +1,12 @@
+# Submission
+
+Submission includes sorting data by user input.
+
+Keybord shortcuts printed on extra header line.
+
+![System Monitor, sort by CPU](images/sort_CPU.png)
+![System Monitor, sort by RAM](images/sort_RAM.png)
+
 # CppND-System-Monitor
 
 Starter code for System Monitor Project in the Object Oriented Programming Course of the [Udacity C++ Nanodegree Program](https://www.udacity.com/course/c-plus-plus-nanodegree--nd213). 
