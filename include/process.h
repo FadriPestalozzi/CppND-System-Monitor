@@ -4,9 +4,12 @@
 #include <string>
 // different overloading of operator< to adjust column sorting
 // used in process.cpp and ncurses_display.cpp
+// enumerate different column sorting options 
+enum colSortOptions { by_cpu, by_cpu_inv, by_ram, by_ram_inv, by_time, by_time_inv, by_cmd, by_cmd_inv}; 
+
 // global variable declared as "extern" in header .h file, included in all source .cpp files
-enum colSortOptions { by_cpu = 0, by_ram = 1}; // enumerate different column sorting options
-extern colSortOptions colSort; // define initial column sorting
+extern colSortOptions colSort; 
+
 /*
 Basic class for Process representation
 It contains relevant attributes as shown below

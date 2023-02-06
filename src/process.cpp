@@ -30,7 +30,7 @@ string Process::User() { return LinuxParser::User(pid); }
 // process starting after system
 long int Process::UpTime() { return LinuxParser::UpTime(pid); }
 
-// mystoi and not stoi since string not always containing a number
+// mystoi and not stoi since string not always containing a number -> catch error
 int mystoi(std::string a){
     try
     {
@@ -48,8 +48,20 @@ bool Process::operator<(Process a) {
     switch(colSort){
         case by_cpu : return CpuUtilization() > a.CpuUtilization();
             break;
+        case by_cpu_inv : return CpuUtilization() < a.CpuUtilization();
+            break;
         case by_ram : return mystoi(Ram()) > mystoi(a.Ram());
             break;
+        case by_ram_inv : return mystoi(Ram()) < mystoi(a.Ram());
+            break;    
+        case by_time : return UpTime() > a.UpTime(); 
+            break;
+        case by_time_inv : return UpTime() < a.UpTime();
+            break;    
+        case by_cmd : return mystoi(Command()) > mystoi(a.Command());
+            break;
+        case by_cmd_inv : return mystoi(Command()) < mystoi(a.Command());
+            break;    
         default : return CpuUtilization() > a.CpuUtilization();
     }
 }

@@ -65,11 +65,19 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
   int const time_column{35};
   int const command_column{46};
   wattron(window, COLOR_PAIR(2));
+  // print keybord shortcuts to sort data
+  mvwprintw(window, ++row, pid_column, "Keys to Sort");
+  mvwprintw(window, row, user_column, "");
+  mvwprintw(window, row, cpu_column, "c C");
+  mvwprintw(window, row, ram_column, "r R");
+  mvwprintw(window, row, time_column, "t T");
+  mvwprintw(window, row, command_column, "m M");
+  // print data header column
   mvwprintw(window, ++row, pid_column, "PID");
   mvwprintw(window, row, user_column, "USER");
   mvwprintw(window, row, cpu_column, "CPU[%%]");
   mvwprintw(window, row, ram_column, "RAM[MB]");
-  mvwprintw(window, row, time_column, "TIME+");
+  mvwprintw(window, row, time_column, "TIME");
   mvwprintw(window, row, command_column, "COMMAND");
   wattroff(window, COLOR_PAIR(2));
   for (int i = 0; i < n; ++i) {
@@ -92,14 +100,15 @@ void NCursesDisplay::DisplayProcesses(std::vector<Process>& processes,
 void NCursesDisplay::Display(System& system, int n) {
   initscr();      // start ncurses
   noecho();       // do not print input values
-  // cbreak();       // terminate ncurses on ctrl + c
+  cbreak();       // terminate ncurses on ctrl + c
   start_color();  // enable color
 
   int x_max{getmaxx(stdscr)};
   WINDOW* system_window = newwin(9, x_max - 1, 0, 0);
   WINDOW* process_window =
       newwin(3 + n, x_max - 1, system_window->_maxy + 1, 0);
-      timeout(-1);
+
+nodelay(stdscr,true); // prevent blocking of getch()
 
   while (true) { // continuously refresh to update displayed values --> re-sort here
     init_pair(1, COLOR_BLUE, COLOR_BLACK);
@@ -121,8 +130,27 @@ void NCursesDisplay::Display(System& system, int n) {
         //  endwin(); // must call
         //  exit(0);
       }
+    else if(ch == 'C'){
+        colSort=by_cpu_inv;
+    }
     else if(ch == 'r'){
         colSort=by_ram;
+    }
+    else if(ch == 'R'){
+        colSort=by_ram_inv;
+    }
+    // sorting by time crashes after some time
+    else if(ch == 't'){ 
+        colSort=by_time;
+    }
+    else if(ch == 'T'){
+        colSort=by_time_inv;
+    }
+    else if(ch == 'm'){
+        colSort=by_cmd;
+    }
+    else if(ch == 'M'){
+        colSort=by_cmd_inv;
     }
   }
 }
